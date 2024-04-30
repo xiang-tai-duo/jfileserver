@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import org.filesys.util.SysFiles;
 import org.filesys.server.filesys.cache.FileState;
 import org.filesys.smb.SeekType;
 
@@ -261,7 +262,7 @@ public class LocalDataNetworkFile extends DBNetworkFile {
         throws IOException {
 
         // Check if the file should exist or can be created
-        if (!hasCreateRequired() && !m_file.exists())
+        if (!hasCreateRequired() && !SysFiles.checkExists(m_file))
             throw new IOException();
 
         // Open or create the file

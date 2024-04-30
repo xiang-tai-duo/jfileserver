@@ -23,12 +23,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.EnumSet;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 import org.filesys.server.SrvSession;
 import org.filesys.server.auth.ClientInfo;
@@ -111,10 +111,10 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
         String fullName = FileName.buildPath(getRootPath(), path, null, java.io.File.separatorChar);
         Path fullPath = Paths.get( fullName);
 
-        if ( Files.exists( fullPath)) {
+        if ( java.nio.file.Files.exists( fullPath)) {
 
             // Check if the path is to a file or folder
-            if ( Files.isDirectory( fullPath))
+            if ( java.nio.file.Files.isDirectory( fullPath))
                 return FileStatus.DirectoryExists;
             else
                 return FileStatus.FileExists;
@@ -148,7 +148,7 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
 
         //  Check if the file exists
         File file = new File(fullName);
-        if (file.exists() == false) {
+        if (SysFiles.checkExists(file) == false) {
 
             //  Try and map the file name string to a local path
             String mappedPath = FileName.mapPath(getRootPath(), params.getPath(), isCaseLess());
@@ -157,7 +157,7 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
 
             //  Create the file object for the mapped file and check if the file exists
             file = new File(mappedPath);
-//            if (file.exists() == false && create == false)
+//            if (file) == false && create == false)
 //                throw new FileNotFoundException("File does not exist, " + params.getPath());
 
             //	Set the new full path
@@ -232,10 +232,10 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
         Path filePath = Paths.get( name);
 
         //  Check if the file exists, and it is a file
-        if ( Files.exists( filePath) && Files.isDirectory( filePath) == false) {
+        if ( java.nio.file.Files.exists( filePath) && java.nio.file.Files.isDirectory( filePath) == false) {
 
             // Delete the file
-            Files.delete( filePath);
+            java.nio.file.Files.delete( filePath);
         }
     }
 
@@ -291,11 +291,11 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
         Path dirPath = Paths.get( dirname);
 
         //  Check if the directory exists, and it is a directory
-        if ( Files.exists( dirPath) && Files.isDirectory( dirPath)) {
+        if ( java.nio.file.Files.exists( dirPath) && java.nio.file.Files.isDirectory( dirPath)) {
 
             //	Delete the directory
             try {
-                Files.delete(dirPath);
+                java.nio.file.Files.delete(dirPath);
             }
             catch ( java.nio.file.DirectoryNotEmptyException ex) {
                 throw new org.filesys.server.filesys.DirectoryNotEmptyException( "Directory not empty - " + dirPath);
@@ -303,7 +303,7 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
         }
 
         //  If the path does not exist then try and map it to a real path, there may be case differences
-        else if ( Files.exists( dirPath) == false && !isCaseLess()) {
+        else if ( java.nio.file.Files.exists( dirPath) == false && !isCaseLess()) {
 
             //  Map the path to a real path
             String mappedPath = FileName.mapPath( getRootPath(), dir, isCaseLess());
@@ -313,11 +313,11 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
                 //  Check if the path is a directory
                 dirPath = Paths.get( mappedPath);
 
-                if ( Files.isDirectory( dirPath)) {
+                if ( java.nio.file.Files.isDirectory( dirPath)) {
 
                     //	Delete the directory
                     try {
-                        Files.delete(dirPath);
+                        java.nio.file.Files.delete(dirPath);
                     }
                     catch ( java.nio.file.DirectoryNotEmptyException ex) {
                         throw new org.filesys.server.filesys.DirectoryNotEmptyException( "Directory not empty - " + dirPath);
@@ -374,7 +374,7 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
         }
 
         try {
-            Files.move(curFile, newFile);
+            java.nio.file.Files.move(curFile, newFile);
         }
         catch ( Exception ex) {
             throw new IOException( "Rename failed from " + curPath + " to " + newPath, ex);
@@ -413,7 +413,7 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
         //	Check that the root path is valid
         Path root = Paths.get( m_rootPath);
 
-        if ( Files.exists( root) == false || Files.isDirectory( root) == false)
+        if ( java.nio.file.Files.exists( root) == false || java.nio.file.Files.isDirectory( root) == false)
             throw new FileLoaderException("SimpleFileLoader RootPath does not exist or is not a directory, " + m_rootPath);
 
         // Check if the filesystem storing the files  is caseless
@@ -423,17 +423,17 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
             String caseTestName = new String("__FsCaseTest__");
             Path caseTestPath = Paths.get( m_rootPath, caseTestName);
 
-            if ( !Files.exists( caseTestPath))
-                Files.createFile( caseTestPath);
+            if ( !java.nio.file.Files.exists( caseTestPath))
+                java.nio.file.Files.createFile( caseTestPath);
 
             // Check if the file can be found when using different case names
-            boolean upperExists = Files.exists( Paths.get( m_rootPath, caseTestName.toUpperCase()));
-            boolean lowerExists = Files.exists( Paths.get( m_rootPath, caseTestName.toLowerCase()));
-            boolean originalExists = Files.exists( caseTestPath);
+            boolean upperExists = java.nio.file.Files.exists( Paths.get( m_rootPath, caseTestName.toUpperCase()));
+            boolean lowerExists = java.nio.file.Files.exists( Paths.get( m_rootPath, caseTestName.toLowerCase()));
+            boolean originalExists = java.nio.file.Files.exists( caseTestPath);
 
             m_fsCaseless = upperExists && lowerExists && originalExists;
 
-            Files.delete( caseTestPath);
+            java.nio.file.Files.delete( caseTestPath);
 
             // DEBUG
             if ( m_debug)
@@ -525,7 +525,7 @@ public class SimpleFileLoader implements FileLoader, NamedFileLoader {
             // Set the file owner
             UserPrincipal userPrincipal = path.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName( cInfo.getUserName());
 
-            Files.setOwner( path, userPrincipal);
+            java.nio.file.Files.setOwner( path, userPrincipal);
 
             sts = true;
 

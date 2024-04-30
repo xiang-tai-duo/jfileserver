@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 
 /**
@@ -100,7 +101,7 @@ public class FileSegment extends Segment {
 
         //	Check if the temporary file exists
         File tempFile = new File(getTemporaryFile());
-        return tempFile.exists();
+        return SysFiles.checkExists(tempFile);
     }
 
     /**

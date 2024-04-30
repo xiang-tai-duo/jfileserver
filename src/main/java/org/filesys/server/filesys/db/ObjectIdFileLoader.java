@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 import org.filesys.server.SrvSession;
 import org.filesys.server.auth.ClientInfo;
@@ -612,7 +613,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
         File tempFile = new File(loadReq.getTemporaryFile());
         FileSegment fileSeg = findFileSegmentForPath(loadReq.getVirtualPath());
 
-        if (tempFile.exists() == false || fileSeg == null) {
+        if (SysFiles.checkExists(tempFile) == false || fileSeg == null) {
 
             // DEBUG
             if (Debug.EnableInfo && hasDebug())
@@ -752,7 +753,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
         File tempFile = new File(saveReq.getTemporaryFile());
         FileSegment fileSeg = findFileSegmentForPath(saveReq.getVirtualPath());
 
-        if (tempFile.exists() == false || fileSeg == null) {
+        if (SysFiles.checkExists(tempFile) == false || fileSeg == null) {
 
             // DEBUG
             if (Debug.EnableInfo && hasDebug())
@@ -908,7 +909,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
 
         // Validate the temporary directory
         File tempDir = new File(tempArea.getValue());
-        if (tempDir.exists() == false) {
+        if (SysFiles.checkExists(tempDir) == false) {
 
             // Temporary directory does not exist, create the directory
             if (tempDir.mkdir() == false)
@@ -920,7 +921,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
             m_tempDirName = m_tempDirName + File.separator;
 
         m_tempDir = new File(m_tempDirName);
-        if (m_tempDir.exists() == false || m_tempDir.isDirectory() == false)
+        if (SysFiles.checkExists(m_tempDir) == false || m_tempDir.isDirectory() == false)
             throw new FileLoaderException("FileLoader TempDirectory does not exist, or is not a directory, " + m_tempDirName);
 
         if (m_tempDir.canWrite() == false)
@@ -1271,7 +1272,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
         m_curTempName = m_tempDirName + getTempDirectoryPrefix() + m_curTempIdx++;
         m_curTempDir = new File(m_curTempName);
 
-        if (m_curTempDir.exists() == false)
+        if (SysFiles.checkExists(m_curTempDir) == false)
             m_curTempDir.mkdir();
 
         // Clear the temporary file count
@@ -1315,7 +1316,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
                             if (Debug.EnableError) {
                                 Debug.println("Delete temp file error: " + ex.toString());
                                 File tempFile = new File(segInfo.getTemporaryFile());
-                                Debug.println("  TempFile file=" + tempFile.getAbsolutePath() + ", exists=" + tempFile.exists());
+                                Debug.println("  TempFile file=" + tempFile.getAbsolutePath() + ", exists=" + SysFiles.checkExists(tempFile));
                                 Debug.println("  FileState state=" + state);
                                 Debug.println("  FileSegmentInfo segInfo=" + segInfo);
                                 Debug.println("  StateCache size=" + m_stateCache.numberOfStates());
@@ -1374,7 +1375,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
                 // DEBUG
                 if (hasDebug()) {
                     File tempFile = new File(segInfo.getTemporaryFile());
-                    if (tempFile.exists() == false) {
+                    if (SysFiles.checkExists(tempFile) == false) {
                         Debug.println("== Skipped file state, queued " + state);
                         Debug.println("   File seg=" + segInfo);
                     }
@@ -1493,7 +1494,7 @@ public abstract class ObjectIdFileLoader implements FileLoader, BackgroundFileLo
 
                 // Check if the temporary file exists, if not then create it
                 File tempFile = new File(fileSeg.getTemporaryFile());
-                if (tempFile.exists() == false) {
+                if (SysFiles.checkExists(tempFile) == false) {
 
                     // Create the temporary file
                     tempFile.createNewFile();

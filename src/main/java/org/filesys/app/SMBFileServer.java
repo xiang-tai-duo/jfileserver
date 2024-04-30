@@ -21,21 +21,32 @@
 package org.filesys.app;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.*;
 
+import org.filesys.util.SysFiles;
+import org.filesys.util.Sys;
 import org.filesys.debug.Debug;
 import org.filesys.debug.DebugConfigSection;
 import org.filesys.netbios.server.NetBIOSNameServer;
 import org.filesys.server.NetworkServer;
 import org.filesys.server.ServerListener;
+import org.filesys.server.auth.EnterpriseSMBAuthenticator;
+import org.filesys.server.auth.UserAccount;
+import org.filesys.server.config.InvalidConfigurationException;
+import org.filesys.server.config.SecurityConfigSection;
 import org.filesys.server.config.ServerConfiguration;
+import org.filesys.server.core.SharedDevice;
+import org.filesys.server.filesys.FilesystemsConfigSection;
 import org.filesys.smb.SMBErrorText;
 import org.filesys.smb.SMBStatus;
 import org.filesys.smb.server.SMBConfigSection;
 import org.filesys.smb.server.SMBServer;
+import org.filesys.smb.server.disk.JavaNIODeviceContext;
 import org.filesys.smb.util.DriveMapping;
 import org.filesys.smb.util.DriveMappingList;
 import org.filesys.util.ConsoleIO;
@@ -68,7 +79,16 @@ public class SMBFileServer implements ServerListener {
 	}
 
 	// Default configuration file name
-	private static final String DEFAULT_CONFIGFILENAME = "fileserver.xml";
+	private static final String DEFAULT_CONFIG_FILE_NAME = "fileSrvConfig-windows.xml";
+
+	// Default configuration file path
+	private static final String DEFAULT_CONFIG_FILE_PATH = "/" + DEFAULT_CONFIG_FILE_NAME;
+
+	// Default shares name
+	private static final String DEFAULT_SHARE_NAME = "JFILESHARE";
+
+	// Default SMB port
+	private static final int DEFAULT_SMB_PORT = 445;
 
 	// Flag to enable/disable local IP address checking
 	private static final boolean CheckLocalIPAddress = false;
@@ -94,6 +114,20 @@ public class SMBFileServer implements ServerListener {
 	 * @param args an array of command-line arguments
 	 */
 	public static void main(String[] args) {
+        try {
+			Sys.println("Starting SMB Server");
+            SMBFileServer.invoke("SMB Server", "C:\\Users\\Administrator\\IdeaProjects\\smb-xcp\\jfileserver\\test", DEFAULT_SMB_PORT);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+	public static void invoke(String shareName, String sharedFolder, int port) throws IOException, InvalidConfigurationException {
+		Sys.println("************************************************");
+		Sys.println("* jfileserver 2024/05/02 18:34                 *");
+		Sys.println("* THIS PROGRAM IS UNDER LGPL-3.0 license       *");
+		Sys.println("* https://github.com/xiang-tai-duo/jfileserver *");
+		Sys.println("************************************************");
 
 		// Create the main file server object
 		SMBFileServer fileServer = new SMBFileServer();
@@ -101,17 +135,53 @@ public class SMBFileServer implements ServerListener {
 		// Loop until shutdown
 		while (m_shutdown == false) {
 
+			XMLServerConfiguration srvConfig = new XMLServerConfiguration();
+			srvConfig.loadConfiguration(DEFAULT_CONFIG_FILE_PATH);
+			FilesystemsConfigSection fileSystemsConfigSection = (FilesystemsConfigSection)srvConfig.getConfigSection(FilesystemsConfigSection.SectionName);
+			if (fileSystemsConfigSection != null) {
+				for (SharedDevice sharedDevice : Collections.list(fileSystemsConfigSection.getShares().enumerateShares())) {
+					if (sharedDevice.getName().equals(DEFAULT_SHARE_NAME)) {
+						sharedDevice.setName(shareName);
+						sharedDevice.setComment(shareName);
+						JavaNIODeviceContext drvCtx = (JavaNIODeviceContext) sharedDevice.getContext();
+						drvCtx.getVolumeInformation().setVolumeLabel(shareName);
+						drvCtx.setDeviceName(sharedFolder);
+						drvCtx.setShareName(shareName);
+						drvCtx.setAvailable(SysFiles.checkExists(new File(sharedFolder)));
+						sharedDevice.setContext(drvCtx);
+						fileSystemsConfigSection.getShares().deleteShare(DEFAULT_SHARE_NAME);
+						fileSystemsConfigSection.getShares().addShare(sharedDevice);
+						break;
+					}
+				}
+			}
+			SMBConfigSection smbConfigSection = (SMBConfigSection)srvConfig.getConfigSection(SMBConfigSection.SectionName);
+			if (smbConfigSection != null) {
+				smbConfigSection.setServerName(shareName);
+				smbConfigSection.setComment(shareName);
+				smbConfigSection.setDomainName("");
+				smbConfigSection.setTcpipSMBPort(port);
+				EnterpriseSMBAuthenticator enterpriseSMBAuthenticator = (EnterpriseSMBAuthenticator) smbConfigSection.getAuthenticator();
+				enterpriseSMBAuthenticator.setDebug(true);
+			}
+			SecurityConfigSection securityConfigSection = (SecurityConfigSection)srvConfig.getConfigSection(SecurityConfigSection.SectionName);
+			if (securityConfigSection != null) {
+				securityConfigSection.getUserAccounts().removeAllUsers();
+
+				UserAccount userAccount = new UserAccount("huang", "welcome01!");
+				userAccount.setAdministrator(true);
+				securityConfigSection.getUserAccounts().addUser(userAccount);
+			}
 			// Start the server
-			fileServer.start(args);
+			fileServer.start(new String[]{}, srvConfig);
 
 			// DEBUG
-			if ( Debug.EnableInfo && m_restart == true) {
+			if (Debug.EnableInfo && m_restart == true) {
 				Debug.println("Restarting server ...");
 				Debug.println("--------------------------------------------------");
 			}
 		}
 	}
-
 	/**
 	 * Class constructor
 	 */
@@ -141,7 +211,7 @@ public class SMBFileServer implements ServerListener {
 	 * 
 	 * @param args String[]
 	 */
-	protected void start(String[] args) {
+	protected void start(String[] args, ServerConfiguration srvConfig) {
 
 		// Command line parameter should specify the configuration file
 		PrintStream out = createOutputStream();
@@ -154,7 +224,7 @@ public class SMBFileServer implements ServerListener {
 		checkPoint(out, CheckPoint.Starting);
 
 		// Load the configuration
-		m_srvConfig = null;
+		m_srvConfig = srvConfig;
 
 		try {
 
@@ -162,7 +232,9 @@ public class SMBFileServer implements ServerListener {
 			checkPoint(out, CheckPoint.ConfigLoading);
 
 			// Load the configuration
-			m_srvConfig = loadConfiguration(out, args);
+			if (m_srvConfig == null) {
+				m_srvConfig = loadConfiguration(args);
+			}
 
 			// Checkpoint - configuration loaded
 			checkPoint(out, CheckPoint.ConfigLoaded);
@@ -413,12 +485,11 @@ public class SMBFileServer implements ServerListener {
 	/**
 	 * Load the server configuration, default is to load using an XML configuration file.
 	 * 
-	 * @param out PrintStream
 	 * @param cmdLineArgs String[]
 	 * @return ServerConfiguration
 	 * @exception Exception Error loading the server configuration
 	 */
-	protected ServerConfiguration loadConfiguration(PrintStream out, String[] cmdLineArgs)
+	public ServerConfiguration loadConfiguration(String[] cmdLineArgs)
 		throws Exception {
 
 		String fileName = null;
@@ -426,7 +497,7 @@ public class SMBFileServer implements ServerListener {
 		if ( cmdLineArgs.length < 1) {
 
 			// Search for a default configuration file in the users home directory
-			fileName = System.getProperty("user.home") + File.separator + DEFAULT_CONFIGFILENAME;
+			fileName = java.lang.System.getProperty("user.home") + File.separator + DEFAULT_CONFIG_FILE_NAME;
 		}
 		else
 			fileName = cmdLineArgs[0];
@@ -448,7 +519,7 @@ public class SMBFileServer implements ServerListener {
 	 * @return PrintStream
 	 */
 	protected PrintStream createOutputStream() {
-		return System.out;
+		return java.lang.System.out;
 	}
 
 	/**

@@ -21,6 +21,7 @@ package org.filesys.server.filesys.pseudo;
 
 import java.io.File;
 
+import org.filesys.util.SysFiles;
 import org.filesys.server.filesys.FileInfo;
 import org.filesys.server.filesys.NetworkFile;
 
@@ -71,7 +72,7 @@ public class LocalPseudoFile extends PseudoFile {
 
             // Get the file details
             File localFile = new File(getFilePath());
-            if (localFile.exists()) {
+            if (SysFiles.checkExists(localFile)) {
 
                 // Create the file information
                 FileInfo fInfo = new PseudoFileInfo(getFileName(), localFile.length(), getAttributes());

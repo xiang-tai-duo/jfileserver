@@ -20,6 +20,7 @@
 package org.filesys.server.filesys;
 
 import com.sun.jna.Platform;
+import org.filesys.util.SysFiles;
 import org.filesys.util.PlatformType;
 
 import java.io.File;
@@ -235,7 +236,7 @@ public final class FileName {
                 //  Check if the current path exists
                 curDir = new File(pathStr.toString());
 
-                if (curDir.exists() == false) {
+                if (SysFiles.checkExists(curDir) == false) {
 
                     //  Check if there is a previous directory to search
                     if (lastDir == null)
@@ -261,7 +262,7 @@ public final class FileName {
 
                             //  Check if the path is valid
                             curDir = new File(pathStr.toString());
-                            if (curDir.exists()) {
+                            if (SysFiles.checkExists(curDir)) {
                                 foundPath = true;
                                 break;
                             }
@@ -415,7 +416,7 @@ public final class FileName {
                 //  Check if the current path exists
                 curDir = new File(pathStr.toString());
 
-                if (curDir.exists() == false) {
+                if (SysFiles.checkExists(curDir) == false) {
 
                     //  Check if there is a previous directory to search
                     if (lastDir == null)
@@ -441,7 +442,7 @@ public final class FileName {
 
                             //  Check if the path is valid
                             curDir = new File(pathStr.toString());
-                            if (curDir.exists()) {
+                            if (SysFiles.checkExists(curDir)) {
                                 foundPath = true;
                                 break;
                             }

@@ -24,22 +24,20 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.attribute.FileTime;
 import java.util.EnumSet;
 import java.util.Random;
 import java.util.StringTokenizer;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 import org.filesys.server.SrvSession;
 import org.filesys.server.core.DeviceContext;
 import org.filesys.server.core.DeviceContextException;
 import org.filesys.server.filesys.*;
 import org.filesys.server.filesys.AccessDeniedException;
-import org.filesys.server.filesys.FileSystem;
 import org.filesys.smb.server.SMBSrvSession;
 import org.filesys.util.WildCard;
 import org.springframework.extensions.config.ConfigElement;
@@ -571,7 +569,7 @@ public class JavaNIODiskDriver implements DiskInterface {
                 //  Check if the current path exists
                 curDir = new File(pathStr.toString());
 
-                if (curDir.exists() == false) {
+                if (SysFiles.checkExists(curDir) == false) {
 
                     //  Check if there is a previous directory to search
                     if (lastDir == null)
@@ -597,7 +595,7 @@ public class JavaNIODiskDriver implements DiskInterface {
 
                             //  Check if the path is valid
                             curDir = new File(pathStr.toString());
-                            if (curDir.exists()) {
+                            if (SysFiles.checkExists(curDir)) {
                                 foundPath = true;
                                 break;
                             }

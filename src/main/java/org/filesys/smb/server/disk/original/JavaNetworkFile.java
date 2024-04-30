@@ -19,6 +19,7 @@
 
 package org.filesys.smb.server.disk.original;
 
+import org.filesys.util.SysFiles;
 import org.filesys.server.filesys.AccessMode;
 import org.filesys.server.filesys.DiskFullException;
 import org.filesys.server.filesys.NetworkFile;
@@ -84,7 +85,7 @@ public class JavaNetworkFile extends NetworkFile {
         File newFile = new File(name);
 
         //  Check if the file exists
-        if (newFile.exists()) {
+        if (SysFiles.checkExists(newFile)) {
 
             //  Set the file object
             m_file = newFile;
@@ -95,7 +96,7 @@ public class JavaNetworkFile extends NetworkFile {
             String lowerName = name.toLowerCase();
             File newFile2 = new File(lowerName);
 
-            if (newFile2.exists()) {
+            if (SysFiles.checkExists(newFile2)) {
 
                 //  Set the file
                 m_file = newFile2;
@@ -142,13 +143,13 @@ public class JavaNetworkFile extends NetworkFile {
         File newFile = new File(name);
 
         //  Check if the file exists
-        if (newFile.exists() == false) {
+        if (SysFiles.checkExists(newFile) == false) {
 
             //  Convert the file name to lowercase and try again
             String lowerName = name.toLowerCase();
             File newFile2 = new File(lowerName);
 
-            if (newFile2.exists()) {
+            if (SysFiles.checkExists(newFile2)) {
 
                 //  Set the file
                 m_file = newFile2;

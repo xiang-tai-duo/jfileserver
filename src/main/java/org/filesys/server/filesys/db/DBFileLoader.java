@@ -31,6 +31,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 import org.filesys.server.SrvSession;
 import org.filesys.server.core.DeviceContext;
@@ -775,7 +776,7 @@ public class DBFileLoader implements FileLoader, BackgroundFileLoader, FileState
         File tempFile = new File(loadReq.getTemporaryFile());
         FileSegment fileSeg = findFileSegmentForPath(loadReq.getVirtualPath());
 
-        if (tempFile.exists() == false || fileSeg == null) {
+        if (SysFiles.checkExists(tempFile) == false || fileSeg == null) {
 
             // DEBUG
             if (Debug.EnableInfo && hasDebug())
@@ -1254,7 +1255,7 @@ public class DBFileLoader implements FileLoader, BackgroundFileLoader, FileState
         File tempFile = new File(saveReq.getTemporaryFile());
         FileSegment fileSeg = findFileSegmentForPath(saveReq.getVirtualPath());
 
-        if (tempFile.exists() == false || fileSeg == null) {
+        if (SysFiles.checkExists(tempFile) == false || fileSeg == null) {
 
             // DEBUG
             if (Debug.EnableInfo && hasDebug())
@@ -1542,7 +1543,7 @@ public class DBFileLoader implements FileLoader, BackgroundFileLoader, FileState
             m_tempDirName = m_tempDirName + File.separator;
 
         m_tempDir = new File(m_tempDirName);
-        if (m_tempDir.exists() == false || m_tempDir.isDirectory() == false)
+        if (SysFiles.checkExists(m_tempDir) == false || m_tempDir.isDirectory() == false)
             throw new FileLoaderException("FileLoader TempDirectory does not exist, or is not a directory, " + m_tempDirName);
 
         if (m_tempDir.canWrite() == false)
@@ -2032,7 +2033,7 @@ public class DBFileLoader implements FileLoader, BackgroundFileLoader, FileState
         m_curTempName = m_tempDirName + getTempDirectoryPrefix() + m_curTempIdx++;
         m_curTempDir = new File(m_curTempName);
 
-        if (m_curTempDir.exists() == false)
+        if (SysFiles.checkExists(m_curTempDir) == false)
             m_curTempDir.mkdir();
 
         // Clear the temporary file count
@@ -2078,7 +2079,7 @@ public class DBFileLoader implements FileLoader, BackgroundFileLoader, FileState
                             if (Debug.EnableError) {
                                 Debug.println("Delete temp file error: " + ex.toString());
                                 File tempFile = new File(segInfo.getTemporaryFile());
-                                Debug.println("  TempFile file=" + tempFile.getAbsolutePath() + ", exists=" + tempFile.exists());
+                                Debug.println("  TempFile file=" + tempFile.getAbsolutePath() + ", exists=" + SysFiles.checkExists(tempFile));
                                 Debug.println("  FileState state=" + state);
                                 Debug.println("  FileSegmentInfo segInfo=" + segInfo);
                                 Debug.println("  StateCache size=" + m_stateCache.numberOfStates());
@@ -2239,7 +2240,7 @@ public class DBFileLoader implements FileLoader, BackgroundFileLoader, FileState
 
                 // Check if the temporary file exists, if not then create it
                 File tempFile = new File(fileSeg.getTemporaryFile());
-                if (tempFile.exists() == false) {
+                if (SysFiles.checkExists(tempFile) == false) {
 
                     // Create the temporary file
                     tempFile.createNewFile();

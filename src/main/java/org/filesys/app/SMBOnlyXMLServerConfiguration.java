@@ -20,11 +20,7 @@
 
 package org.filesys.app;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.net.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,6 +31,7 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.filesys.util.Sys;
 import org.filesys.audit.Audit;
 import org.filesys.audit.AuditConfigSection;
 import org.filesys.audit.AuditGroup;
@@ -146,7 +143,14 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 		throws IOException, InvalidConfigurationException {
 
 		// Open the configuration file
-		InputStream inFile = new FileInputStream(fname);
+		InputStream inFile;
+
+		if (fname.startsWith("/")) {
+			inFile = this.getClass().getResourceAsStream(fname);
+		} else {
+			inFile = new FileInputStream(fname);
+		}
+
 		Reader inRead = new InputStreamReader(inFile);
 
 		// Call the main parsing method
@@ -180,6 +184,7 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 			loadConfiguration(doc);
 		}
 		catch (Exception ex) {
+			Sys.err(ex);
 
 			// Rethrow the exception as a configuration exeception
 			throw new InvalidConfigurationException("XML error", ex);
@@ -239,6 +244,7 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 			procExtensions( childNodes);
 		}
 		catch (Exception ex) {
+			Sys.err(ex);
 
 			// Rethrow the exception as a configuration exception
 			throw new InvalidConfigurationException("XML error", ex);
@@ -462,9 +468,9 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 					int[] newMaxSizes  = new int[elemIdx];
 					
 					// Copy the values to the shorter arrays
-					System.arraycopy(pktSizes, 0, newPktSizes, 0, elemIdx);
-					System.arraycopy(initSizes, 0, newInitSizes, 0, elemIdx);
-					System.arraycopy(maxSizes, 0, newMaxSizes, 0, elemIdx);
+					java.lang.System.arraycopy(pktSizes, 0, newPktSizes, 0, elemIdx);
+					java.lang.System.arraycopy(initSizes, 0, newInitSizes, 0, elemIdx);
+					java.lang.System.arraycopy(maxSizes, 0, newMaxSizes, 0, elemIdx);
 					
 					// Move the new arrays into place
 					pktSizes  = newPktSizes;
@@ -1097,7 +1103,7 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
                 }
 
                 // Check if the current operating system is supported by the Win32 NetBIOS handler
-                String osName = System.getProperty("os.name");
+                String osName = java.lang.System.getProperty("os.name");
                 if (osName.startsWith("Windows")
                         && (osName.endsWith("95") == false && osName.endsWith("98") == false && osName.endsWith("ME") == false)) {
 
@@ -2078,7 +2084,7 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 		else {
 
 			// Create volume information using the share name
-			volInfo = new VolumeInfo(name, (int) System.currentTimeMillis(), new Date(System.currentTimeMillis()));
+			volInfo = new VolumeInfo(name, (int) java.lang.System.currentTimeMillis(), new Date(java.lang.System.currentTimeMillis()));
 		}
 
 		// Check if the disk sizing information has been specified
@@ -2285,12 +2291,15 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 			}
 		}
 		catch (ClassNotFoundException ex) {
+			Sys.err(ex);
 			throw new InvalidConfigurationException("Disk driver class " + getText(classElem) + " not found");
 		}
 		catch (DeviceContextException ex) {
+			Sys.err(ex);
 			throw new InvalidConfigurationException("Driver context error", ex);
 		}
 		catch (Exception ex) {
+			Sys.err(ex);
 			throw new InvalidConfigurationException("Disk share setup error", ex);
 		}
 	}
@@ -2413,7 +2422,7 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 				String envVar = token.substring(2, token.length() - 1);
 
 				// Get the environment variable value
-				String envValue = System.getenv( envVar);
+				String envValue = java.lang.System.getenv( envVar);
 
 				if ( envValue != null) {
 
@@ -2423,7 +2432,7 @@ public class SMBOnlyXMLServerConfiguration extends ServerConfiguration {
 				else {
 
 					// Check for a system property
-					envValue = System.getProperty( envVar);
+					envValue = java.lang.System.getProperty( envVar);
 
 					if ( envValue != null) {
 

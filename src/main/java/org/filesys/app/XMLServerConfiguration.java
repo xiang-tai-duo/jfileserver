@@ -28,6 +28,8 @@ import java.security.KeyStoreException;
 import java.util.EnumSet;
 import java.util.StringTokenizer;
 
+import org.filesys.util.SysFiles;
+import org.filesys.util.Sys;
 import org.filesys.ftp.*;
 import org.filesys.oncrpc.nfs.NFSConfigSection;
 import org.filesys.oncrpc.nfs.NFSSrvSession;
@@ -129,6 +131,7 @@ public class XMLServerConfiguration extends SMBOnlyXMLServerConfiguration {
 			procExtensions( childNodes);
 		}
 		catch (Exception ex) {
+			Sys.err(ex);
 
 			// Rethrow the exception as a configuration exeception
 			throw new InvalidConfigurationException("XML error", ex);
@@ -492,7 +495,7 @@ public class XMLServerConfiguration extends SMBOnlyXMLServerConfiguration {
 			String keyStorePath = getTextWithEnvVars( elem);
 			File keyStoreFile = new File( keyStorePath);
 			
-			if ( !keyStoreFile.exists())
+			if ( !SysFiles.checkExists(keyStoreFile))
 				throw new InvalidConfigurationException("FTPS key store file does not exist, " + keyStorePath);
 			else if ( keyStoreFile.isDirectory())
 				throw new InvalidConfigurationException("FTPS key store path is a directory, " + keyStorePath);
@@ -538,7 +541,7 @@ public class XMLServerConfiguration extends SMBOnlyXMLServerConfiguration {
 			String trustStorePath = getTextWithEnvVars( elem);
 			File trustStoreFile = new File( trustStorePath);
 			
-			if ( !trustStoreFile.exists())
+			if ( !SysFiles.checkExists(trustStoreFile))
 				throw new InvalidConfigurationException("FTPS trust store file does not exist, " + trustStorePath);
 			else if ( trustStoreFile.isDirectory())
 				throw new InvalidConfigurationException("FTPS trust store path is a directory, " + trustStorePath);
@@ -597,7 +600,7 @@ public class XMLServerConfiguration extends SMBOnlyXMLServerConfiguration {
 		if ( elem != null) {
 
 			// Enable SSLEngine debug output
-			System.setProperty("javax.net.debug", "ssl,handshake");
+			java.lang.System.setProperty("javax.net.debug", "ssl,handshake");
 		}
 	}
 
@@ -846,7 +849,7 @@ public class XMLServerConfiguration extends SMBOnlyXMLServerConfiguration {
 				
 				try {
 					File confFile = new File( configPath);
-					if ( confFile.exists() == false)
+					if ( SysFiles.checkExists(confFile) == false)
 						throw new InvalidConfigurationException( "HazelCast configuration file does not exist, " + configPath);
 					
 					if ( confFile.isDirectory())

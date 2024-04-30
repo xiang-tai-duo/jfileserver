@@ -19,6 +19,8 @@
 
 package org.filesys.debug;
 
+import org.filesys.util.Sys;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.StringTokenizer;
@@ -37,7 +39,7 @@ public final class Debug {
     public static final boolean EnableDbg = true;
 
     //	Line seperator used for exception stack traces
-    private static final String LineSeperator = System.getProperty("line.separator");
+    private static final String LineSeperator = java.lang.System.getProperty("line.separator");
 
     //  Debug output levels
     //
@@ -88,7 +90,11 @@ public final class Debug {
      * @param str String
      */
     public static final void print(String str) {
-        m_debug.debugPrint(str);
+        if (Sys.isRestricted) {
+            Sys.println(str);
+        } else {
+            m_debug.debugPrint(str);
+        }
     }
 
     /**
@@ -98,7 +104,11 @@ public final class Debug {
      * @param level int
      */
     public static final void print(String str, int level) {
-        m_debug.debugPrint(str, level);
+        if (Sys.isRestricted) {
+            Sys.println(str);
+        } else {
+            m_debug.debugPrint(str, level);
+        }
     }
 
     /**
@@ -107,7 +117,11 @@ public final class Debug {
      * @param str String
      */
     public static final void println(String str) {
-        m_debug.debugPrintln(str);
+        if (Sys.isRestricted) {
+            Sys.println(str);
+        } else {
+            m_debug.debugPrintln(str);
+        }
     }
 
     /**
@@ -117,7 +131,11 @@ public final class Debug {
      * @param level int
      */
     public static final void println(String str, int level) {
-        m_debug.debugPrintln(str, level);
+        if (Sys.isRestricted) {
+            Sys.println(str);
+        } else {
+            m_debug.debugPrintln(str, level);
+        }
     }
 
     /**
@@ -136,7 +154,11 @@ public final class Debug {
      * @param level int
      */
     public static final void println(Exception ex, int level) {
-        m_debug.debugPrintln(ex, level);
+        if (Sys.isRestricted) {
+            Sys.err(ex);
+        } else {
+            m_debug.debugPrintln(ex, level);
+        }
     }
 
     /**
@@ -163,7 +185,12 @@ public final class Debug {
         //	Split the resulting string into seperate records and output to the debug device
         StringTokenizer strTok = new StringTokenizer(strWrt.toString(), LineSeperator);
 
-        while (strTok.hasMoreTokens())
-            m_debug.debugPrintln(strTok.nextToken(), level);
+        while (strTok.hasMoreTokens()) {
+            if (Sys.isRestricted) {
+                Sys.println(strTok.nextToken());
+            } else {
+                m_debug.debugPrintln(strTok.nextToken(), level);
+            }
+        }
     }
 }

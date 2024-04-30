@@ -19,6 +19,7 @@
 
 package org.filesys.smb.server.disk.original;
 
+import org.filesys.util.SysFiles;
 import org.filesys.server.filesys.FileAttribute;
 import org.filesys.server.filesys.FileInfo;
 import org.filesys.server.filesys.FileName;
@@ -140,11 +141,11 @@ public class JavaFileSearchContext extends SearchContext {
 
             //  Path may be a file
             m_root = new File(pathStr[0], pathStr[1]);
-            if (m_root.exists() == false) {
+            if (SysFiles.checkExists(m_root) == false) {
 
                 //  Rebuild the path, looks like it is a directory
                 m_root = new File(FileName.buildPath(pathStr[0], pathStr[1], null, File.separatorChar));
-                if (m_root.exists() == false)
+                if (SysFiles.checkExists(m_root) == false)
                     throw new java.io.FileNotFoundException(path);
             }
         }

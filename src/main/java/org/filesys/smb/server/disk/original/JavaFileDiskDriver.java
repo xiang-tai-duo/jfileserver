@@ -19,6 +19,7 @@
 
 package org.filesys.smb.server.disk.original;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 import org.filesys.server.SrvSession;
 import org.filesys.server.core.DeviceContext;
@@ -72,7 +73,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
             //  Create a file object
             File file = new File(pathStr[0], pathStr[1]);
-            if (file.exists() == true && file.isFile()) {
+            if (SysFiles.checkExists(file) == true && file.isFile()) {
 
                 //  Fill in a file information object for this file/directory
                 long flen = file.length();
@@ -107,7 +108,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
                 //  Rebuild the path, looks like it is a directory
                 File dir = new File(FileName.buildPath(pathStr[0], pathStr[1], null, File.separatorChar));
-                if (dir.exists() == true) {
+                if (SysFiles.checkExists(dir) == true) {
 
                     //  Fill in a file information object for this directory
                     int fattr = 0;
@@ -130,7 +131,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
             //  Get file information for a directory
             File dir = new File(pathStr[0]);
-            if (dir.exists() == true) {
+            if (SysFiles.checkExists(dir) == true) {
 
                 //  Fill in a file information object for this directory
                 int fattr = 0;
@@ -216,7 +217,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
         //  Check if the file already exists
         File file = new File(fname);
-        if (file.exists())
+        if (SysFiles.checkExists(file))
             throw new FileExistsException();
 
         //  Create the new file
@@ -250,7 +251,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
         //  Check if the directory exists, and it is a directory
         File delDir = new File(dirname);
-        if (delDir.exists() && delDir.isDirectory()) {
+        if (SysFiles.checkExists(delDir) && delDir.isDirectory()) {
 
             //	Check if the directory contains any files
             String[] fileList = delDir.list();
@@ -262,7 +263,7 @@ public class JavaFileDiskDriver implements DiskInterface {
         }
 
         //  If the path does not exist then try and map it to a real path, there may be case differences
-        else if (delDir.exists() == false) {
+        else if (SysFiles.checkExists(delDir) == false) {
 
             //  Map the path to a real path
             String mappedPath = mapPath(ctx.getDeviceName(), dir);
@@ -301,11 +302,11 @@ public class JavaFileDiskDriver implements DiskInterface {
 
         //  Check if the file exists, and it is a file
         File delFile = new File(fullname);
-        if (delFile.exists() && delFile.isFile())
+        if (SysFiles.checkExists(delFile) && delFile.isFile())
             delFile.delete();
 
             //  If the path does not exist then try and map it to a real path, there may be case differences
-        else if (delFile.exists() == false) {
+        else if (SysFiles.checkExists(delFile) == false) {
 
             //  Map the path to a real path
             String mappedPath = mapPath(ctx.getDeviceName(), name);
@@ -313,7 +314,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
                 //  Check if the path is a file and exists
                 delFile = new File(mappedPath);
-                if (delFile.exists() && delFile.isFile())
+                if (SysFiles.checkExists(delFile) && delFile.isFile())
                     delFile.delete();
             }
         }
@@ -335,7 +336,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
         //  Check if the file exists, and it is a file
         File chkFile = new File(filename);
-        if (chkFile.exists()) {
+        if (SysFiles.checkExists(chkFile)) {
 
             //	Check if the path is a file or directory
             if (chkFile.isFile())
@@ -345,7 +346,7 @@ public class JavaFileDiskDriver implements DiskInterface {
         }
 
         //  If the path does not exist then try and map it to a real path, there may be case differences
-        if (chkFile.exists() == false) {
+        if (SysFiles.checkExists(chkFile) == false) {
 
             //  Map the path to a real path
             try {
@@ -354,7 +355,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
                     //  Check if the path is a file
                     chkFile = new File(mappedPath);
-                    if (chkFile.exists()) {
+                    if (SysFiles.checkExists(chkFile)) {
                         if (chkFile.isFile())
                             return FileStatus.FileExists;
                         else
@@ -431,7 +432,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
         //  Check if the directory exists, and it is a directory
         File rootDir = new File(ctx.getDeviceName());
-        if (rootDir.exists() == false || rootDir.isDirectory() == false)
+        if (SysFiles.checkExists(rootDir) == false || rootDir.isDirectory() == false)
             throw new FileNotFoundException(ctx.getDeviceName());
 
         //  Create a temporary file in the root directory, this will test if we have write access
@@ -448,7 +449,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
                 //  Create a temporary file name
                 tempFile = new File(rootDir, "_JSRV" + (System.currentTimeMillis() & 0x0FFF) + ".TMP");
-                if (tempFile.exists() == false)
+                if (SysFiles.checkExists(tempFile) == false)
                     fileOK = true;
             }
 
@@ -549,7 +550,7 @@ public class JavaFileDiskDriver implements DiskInterface {
                 //  Check if the current path exists
                 curDir = new File(pathStr.toString());
 
-                if (curDir.exists() == false) {
+                if (SysFiles.checkExists(curDir) == false) {
 
                     //  Check if there is a previous directory to search
                     if (lastDir == null)
@@ -575,7 +576,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
                             //  Check if the path is valid
                             curDir = new File(pathStr.toString());
-                            if (curDir.exists()) {
+                            if (SysFiles.checkExists(curDir)) {
                                 foundPath = true;
                                 break;
                             }
@@ -670,7 +671,7 @@ public class JavaFileDiskDriver implements DiskInterface {
         DeviceContext ctx = tree.getContext();
         String fname = FileName.buildPath(ctx.getDeviceName(), params.getPath(), null, File.separatorChar);
         File file = new File(fname);
-        if (file.exists() == false) {
+        if (SysFiles.checkExists(file) == false) {
 
             //  Try and map the file name string to a local path
             String mappedPath = mapPath(ctx.getDeviceName(), params.getPath());
@@ -679,7 +680,7 @@ public class JavaFileDiskDriver implements DiskInterface {
 
             //  Create the file object for the mapped file and check if the file exists
             file = new File(mappedPath);
-            if (file.exists() == false)
+            if (SysFiles.checkExists(file) == false)
                 throw new FileNotFoundException(fname);
         }
 
@@ -926,7 +927,7 @@ public class JavaFileDiskDriver implements DiskInterface {
             ctx.setFilesystemAttributes(FileSystem.CasePreservedNames + FileSystem.UnicodeOnDisk);
 
             //	If the path is not valid then set the filesystem as unavailable
-            if (rootDir.exists() == false || rootDir.isDirectory() == false || rootDir.list() == null) {
+            if (SysFiles.checkExists(rootDir) == false || rootDir.isDirectory() == false || rootDir.list() == null) {
 
                 //	Mark the filesystem as unavailable
                 ctx.setAvailable(false);

@@ -1,3 +1,10 @@
 release.properties
 .idea/*
 saved/*
+/test
+/target
+/src/main/java/org/filesys/util/SysCheck.java
+/org_filesys_util_SysCheck.h
+/integ.cmd
+/jfileserver.iml
+/org.filesys.util.SysCheck.cmd

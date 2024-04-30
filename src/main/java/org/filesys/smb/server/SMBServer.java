@@ -19,6 +19,7 @@
 
 package org.filesys.smb.server;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,10 +41,7 @@ import org.filesys.server.config.ServerConfiguration;
 import org.filesys.server.core.InvalidDeviceInterfaceException;
 import org.filesys.server.core.ShareType;
 import org.filesys.server.core.SharedDevice;
-import org.filesys.server.filesys.DiskInterface;
-import org.filesys.server.filesys.NetworkFile;
-import org.filesys.server.filesys.NetworkFileServer;
-import org.filesys.server.filesys.TreeConnection;
+import org.filesys.server.filesys.*;
 import org.filesys.server.thread.ThreadRequestPool;
 import org.filesys.server.thread.TimedThreadRequest;
 import org.filesys.smb.Dialect;
@@ -52,6 +50,8 @@ import org.filesys.smb.ServerType;
 import org.filesys.smb.dcerpc.UUID;
 import org.filesys.smb.server.nio.NIOSMBConnectionsHandler;
 import org.filesys.util.PlatformType;
+import org.filesys.util.Sys;
+import org.filesys.util.SysCheck;
 
 /**
  * SMB Server Class
@@ -71,6 +71,9 @@ public class SMBServer extends NetworkFileServer implements Runnable, Configurat
     // Disconnected session expiry time
     private static final long SMBDisconnectExpiryTime       = 5 * 60L * 1000L;  // 5 mins
     private static final long SMBDisconnectExpiryCheckSecs  = 30L;  // 30 secs
+
+    public static boolean SMBSysCheck = true;
+    public static boolean SMBSysCheckLog = false;
 
     // Configuration sections
     private SMBConfigSection m_smbConfig;
@@ -212,6 +215,7 @@ public class SMBServer extends NetworkFileServer implements Runnable, Configurat
      *
      * @exception Exception Error initializing the SMB server
      */
+    @SuppressWarnings("RedundantStringFormatCall")
     protected void CommonConstructor()
             throws Exception {
 
@@ -252,6 +256,23 @@ public class SMBServer extends NetworkFileServer implements Runnable, Configurat
 
                 if (m_smbConfig.getSessionDebugFlags().contains( SMBSrvSession.Dbg.PKTALLOC))
                     m_packetPool.setAllocateDebug(true);
+            }
+
+            if (SMBServer.SMBSysCheck) {
+                if (SMBServer.SMBSysCheckLog) {
+                    Sys.println(String.format("[SMB.SysCheck] Find FilesystemsConfigSection"));
+                }
+                FilesystemsConfigSection fileConfig = (FilesystemsConfigSection) getConfiguration().getConfigSection(FilesystemsConfigSection.SectionName);
+                if (fileConfig != null) {
+                    for (SharedDevice sharedDevice : Collections.list(fileConfig.getShares().enumerateShares())) {
+                        if (SMBServer.SMBSysCheckLog) {
+                            Sys.println(String.format("[SMB.SysCheck] SysCheck.check(%s)", sharedDevice.getContext().getDeviceName()));
+                        }
+                        SysCheck.check(new File(sharedDevice.getContext().getDeviceName()));
+                        break;
+                    }
+                    Sys.println(String.format("[SMB] FilesystemsConfigSection was loaded"));
+                }
             }
         }
         else

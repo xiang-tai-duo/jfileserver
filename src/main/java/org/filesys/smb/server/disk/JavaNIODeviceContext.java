@@ -17,6 +17,7 @@
 
 package org.filesys.smb.server.disk;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 import org.filesys.server.core.DeviceContextException;
 import org.filesys.server.filesys.DiskDeviceContext;
@@ -25,8 +26,6 @@ import org.filesys.util.MemorySize;
 import org.springframework.extensions.config.ConfigElement;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
 
 /**
  * Java NIO Filesystem Device Context Class
@@ -117,7 +116,7 @@ public class JavaNIODeviceContext extends DiskDeviceContext {
                 // Get the trashcan path
                 m_trashDir = new File( trashCanPath.getValue());
 
-                if ( m_trashDir.exists() == false)
+                if ( SysFiles.checkExists(m_trashDir) == false)
                     throw new DeviceContextException("Trashcan folder does not exist - " + m_trashDir.getAbsolutePath());
                 else if ( m_trashDir.isFile())
                     throw new DeviceContextException("Trashcan path is not a folder - " + m_trashDir.getAbsolutePath());
@@ -132,16 +131,18 @@ public class JavaNIODeviceContext extends DiskDeviceContext {
             else {
 
                 // Use/create a folder within the shared folder as the trashcan folder
-                File trashDir = new File( rootDir, TrashcanFolderName);
-                if ( trashDir.exists() == false) {
+                if (SysFiles.checkExists(rootDir)) {
+                    File trashDir = new File(rootDir, TrashcanFolderName);
+                    if (SysFiles.checkExists(trashDir) == false) {
 
-                    // Create the trashcan folder
-                    if (trashDir.mkdir() == false)
-                        throw new DeviceContextException("Failed to create trashcan folder - " + trashDir.getAbsolutePath());
+                        // Create the trashcan folder
+                        if (trashDir.mkdir() == false)
+                            throw new DeviceContextException("Failed to create trashcan folder - " + trashDir.getAbsolutePath());
+                    }
+
+                    // Set the trashcan path
+                    m_trashDir = trashDir;
                 }
-
-                // Set the trashcan path
-                m_trashDir = trashDir;
             }
 
             // Check if debug output is enabled
@@ -152,13 +153,13 @@ public class JavaNIODeviceContext extends DiskDeviceContext {
             setFilesystemAttributes(FileSystem.CasePreservedNames + FileSystem.UnicodeOnDisk);
 
             //	If the path is not valid then set the filesystem as unavailable
-            if (rootDir.exists() == false || rootDir.isDirectory() == false || rootDir.list() == null) {
+            if (SysFiles.checkExists(rootDir) == false || rootDir.isDirectory() == false || rootDir.list() == null) {
 
                 //	Mark the filesystem as unavailable
                 setAvailable(false);
 
                 // DEBUG
-                if ( hasDebug())
+                if (hasDebug())
                     Debug.println("Share " + getShareName() + ", local path=" + rootDir.getPath() + " unavailable");
             }
         }

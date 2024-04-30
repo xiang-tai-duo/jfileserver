@@ -22,6 +22,7 @@ package org.filesys.server.filesys.loader;
 import java.io.File;
 import java.io.IOException;
 
+import org.filesys.util.SysFiles;
 import org.filesys.debug.Debug;
 
 
@@ -75,7 +76,7 @@ public class FileSegmentInfo extends SegmentInfo {
         //	Delete the temporary file used by the file segment
         File tempFile = new File(getTemporaryFile());
 
-        if (tempFile.exists() && tempFile.delete() == false) {
+        if (SysFiles.checkExists(tempFile) && tempFile.delete() == false) {
 
             //	DEBUG
             Debug.println("** Failed to delete " + toString() + " **");

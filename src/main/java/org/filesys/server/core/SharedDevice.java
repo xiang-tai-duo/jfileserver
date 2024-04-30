@@ -270,7 +270,7 @@ public class SharedDevice implements Comparable<SharedDevice> {
      *
      * @param ctx DeviceContext
      */
-    protected void setContext(DeviceContext ctx) {
+    public void setContext(DeviceContext ctx) {
         m_drvCtx = ctx;
     }
 
@@ -279,7 +279,7 @@ public class SharedDevice implements Comparable<SharedDevice> {
      *
      * @param iface DeviceInterface
      */
-    protected final void setInterface(DeviceInterface iface) {
+    public final void setInterface(DeviceInterface iface) {
         m_interface = iface;
     }
 
@@ -288,7 +288,7 @@ public class SharedDevice implements Comparable<SharedDevice> {
      *
      * @param name java.lang.String    Shared device name.
      */
-    protected final void setName(String name) {
+    public final void setName(String name) {
         m_name = name;
     }
 
@@ -297,7 +297,7 @@ public class SharedDevice implements Comparable<SharedDevice> {
      *
      * @param typ ShareType  Shared device type, as specified by class ShareType.
      */
-    protected final void setType(ShareType typ) {
+    public final void setType(ShareType typ) {
         m_type = typ;
     }
 
